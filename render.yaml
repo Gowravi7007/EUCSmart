@@ -1,10 +1,10 @@
 services:
   - type: web
     name: antigravity-backend
-    env: node
-    rootDir: backend
-    buildCommand: npm install
-    startCommand: node server.js
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn api:app
     envVars:
-      - key: NODE_ENV
-        value: production
+      - key: PYTHON_VERSION
+        value: 3.11.0
+
