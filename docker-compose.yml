@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
+  manufacturer-client:
+    build:
+      context: ./manufacturer-client
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    environment:
+      - VITE_API_URL=http://your-production-server-ip:3000
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  vehicle-client:
+    build:
+      context: ./vehicle-client
+      dockerfile: Dockerfile
+    ports:
+      - "5174:80"
+    environment:
+      - VITE_API_URL=http://your-production-server-ip:3000
+    depends_on:
+      - backend
+    restart: unless-stopped
