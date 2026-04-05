@@ -4,90 +4,413 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EUCSmart | Secure OTA Console</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #030712;
+            --panel-bg: rgba(17, 24, 39, 0.4);
+            --border-glow: rgba(56, 189, 248, 0.2);
+            --primary: #38bdf8;
+            --accent: #818cf8;
+            --success: #34d399;
+            --danger: #f87171;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            overflow-x: hidden;
+            background-image: 
+                linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* Animated glowing orbs behind the UI */
+        .ambient-light {
+            position: fixed; width: 50vw; height: 50vw; border-radius: 50%;
+            filter: blur(100px); z-index: -1; opacity: 0.15;
+            animation: drift 15s infinite alternate ease-in-out;
+        }
+        .light-1 { background: var(--primary); top: -20%; left: -10%; }
+        .light-2 { background: var(--accent); bottom: -20%; right: -10%; animation-delay: -5s; }
+
+        @keyframes drift {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(50px, 50px) scale(1.1); }
+        }
+
+        .container {
+            width: 100%; max-width: 1300px; padding: 2rem;
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Futuristic Header */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 3rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-glow);
+        }
+
+        .brand-container { display: flex; align-items: center; gap: 1rem; }
+        
+        .logo-box {
+            width: 48px; height: 48px;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 0 15px var(--border-glow);
+        }
+
+        .logo-box svg { width: 24px; height: 24px; color: var(--primary); }
+
+        h1 { font-weight: 300; font-size: 1.8rem; letter-spacing: 2px; }
+        h1 strong { font-weight: 600; color: var(--primary); }
+
+        .system-status {
+            display: flex; align-items: center; gap: 0.8rem;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;
+            color: var(--primary); background: rgba(56, 189, 248, 0.05);
+            padding: 0.6rem 1.2rem; border-radius: 8px;
+            border: 1px solid var(--border-glow);
+        }
+
+        .pulse-dot {
+            width: 8px; height: 8px; background: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--primary);
+            animation: pulseObj 2s infinite;
+        }
+
+        @keyframes pulseObj { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+        /* Grid Layout */
+        .grid-panel {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem;
+        }
+
+        @media (max-width: 960px) { .grid-panel { grid-template-columns: 1fr; } }
+
+        .panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glow);
+            border-radius: 16px; padding: 2.5rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 0 30px rgba(56, 189, 248, 0.02);
+            position: relative; overflow: hidden;
+        }
+
+        .panel::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            opacity: 0.5;
+        }
+
+        h2 {
+            font-family: 'JetBrains Mono', monospace; font-size: 1.1rem;
+            font-weight: 400; color: var(--primary); margin-bottom: 2rem;
+            text-transform: uppercase; letter-spacing: 1px;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+
+        h2::before { content: '>'; color: var(--accent); font-weight: 700; }
+
+        /* Future Inputs */
+        .input-group { margin-bottom: 1.5rem; }
+        
+        label {
+            display: block; font-size: 0.8rem; font-weight: 500;
+            color: var(--text-dim); margin-bottom: 0.5rem; letter-spacing: 0.5px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        input {
+            width: 100%; background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1); color: var(--text-main);
+            padding: 1rem 1.2rem; border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            outline: none; border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+        }
+
+        .flex-row { display: flex; gap: 0.5rem; }
+        .flex-row input { flex: 1; }
+
+        .telemetry-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; }
+
+        /* Cyber Buttons */
+        button {
+            font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; font-weight: 600;
+            letter-spacing: 1px; text-transform: uppercase; border-radius: 8px;
+            cursor: pointer; transition: all 0.3s; border: none;
+            display: flex; justify-content: center; align-items: center; gap: 0.5rem;
+        }
+
+        .btn-outline {
+            background: transparent; border: 1px solid rgba(255,255,255,0.2);
+            color: var(--text-main); padding: 0 1.5rem;
+        }
+
+        .btn-outline:hover { background: rgba(255,255,255,0.05); border-color: var(--primary); color: var(--primary); }
+
+        .btn-glow {
+            width: 100%; padding: 1.2rem; margin-top: 1.5rem; background: var(--primary);
+            color: #000; box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+        }
+
+        .btn-glow:hover {
+            background: #fff; box-shadow: 0 0 30px rgba(56, 189, 248, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .loader {
+            width: 18px; height: 18px; border: 2px solid rgba(0,0,0,0.3);
+            border-top-color: #000; border-radius: 50%;
+            animation: spin 0.8s linear infinite; display: none;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Output & Terminal Area */
+        .empty-zone {
+            height: 12rem; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; color: var(--text-dim);
+            border: 1px dashed rgba(255,255,255,0.1); border-radius: 8px;
+            margin-bottom: 2rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;
+        }
+
+        .result-hud {
+            background: rgba(0,0,0,0.4); padding: 1.5rem; border-radius: 8px;
+            border-left: 4px solid var(--primary); margin-bottom: 2rem;
+            animation: expandH 0.3s ease-out;
+        }
+        
+        @keyframes expandH { from { opacity: 0; transform: scaleX(0.9); } to { opacity: 1; transform: scaleX(1); } }
+
+        .hud-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .hud-header h3 { font-weight: 500; font-size: 1.2rem; }
+        
+        .status-tag {
+            padding: 0.4rem 1rem; border-radius: 4px; font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem; font-weight: 700; letter-spacing: 1px;
+        }
+        .tag-ok { background: rgba(52, 211, 153, 0.15); color: var(--success); border: 1px solid var(--success); }
+        .tag-err { background: rgba(248, 113, 113, 0.15); color: var(--danger); border: 1px solid var(--danger); }
+
+        .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .metric p { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 0.4rem; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
+        .metric h4 { font-size: 1.2rem; font-weight: 500; }
+        .val-good { color: var(--success); }
+        .val-bad { color: var(--danger); }
+        .val-warn { color: var(--accent); }
+
+        /* Hacker Terminal */
+        .cyber-term {
+            background: #000; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden;
+        }
+        .term-bar {
+            background: rgba(255,255,255,0.05); padding: 0.5rem 1rem;
+            display: flex; gap: 0.5rem; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .term-dot { width: 10px; height: 10px; border-radius: 50%; opacity: 0.5; }
+        .term-dot:nth-child(1) { background: var(--danger); }
+        .term-dot:nth-child(2) { background: #fbbf24; }
+        .term-dot:nth-child(3) { background: var(--success); }
+        
+        .term-body {
+            padding: 1rem; height: 11rem; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--primary); line-height: 1.7;
+        }
+        .log-line { opacity: 0.9; margin-bottom: 4px; }
+        .log-line.error { color: var(--danger); }
+        .log-line.success { color: var(--success); }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+    </style>
 </head>
 <body>
-    <div class="background-effects">
-        <div class="glow-orb orb-1"></div>
-        <div class="glow-orb orb-2"></div>
-    </div>
-    
-    <main class="dashboard">
+    <div class="ambient-light light-1"></div>
+    <div class="ambient-light light-2"></div>
+
+    <div class="container">
         <header>
-            <div class="brand">
-                <div class="logo">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            <div class="brand-container">
+                <div class="logo-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                        <polyline points="2 17 12 22 22 17"></polyline>
+                        <polyline points="2 12 12 17 22 12"></polyline>
+                    </svg>
                 </div>
-                <h1>EUCSmart <span class="badge">SECURE_VERIFY</span></h1>
+                <h1>EUCSmart <strong>SECURE_VERIFY</strong></h1>
             </div>
-            <div class="status-indicator">
-                <div class="pulse"></div>
-                <span>SYSTEM ONLINE</span>
+            <div class="system-status">
+                <div class="pulse-dot"></div>
+                <span>UPLINK ESTABLISHED</span>
             </div>
         </header>
 
-        <section class="grid-container">
-            <!-- Upload Form -->
-            <div class="glass-panel form-panel">
-                <h2>Deploy Firmware OTA</h2>
-                <p class="subtitle">Submit binary string and simulated telemetry data for AI verification.</p>
-                
-                <form id="ota-form">
-                    <div class="form-group">
-                        <label for="binary">Firmware Binary String</label>
-                        <input type="text" id="binary" placeholder="e.g., firmware_v1_bin" required>
+        <main class="grid-panel">
+            <!-- LEFT PANEL: INPUT -->
+            <div class="panel">
+                <h2>Deploy_Firmware_Payload</h2>
+                <form id="cyber-form">
+                    <div class="input-group">
+                        <label>FIRMWARE_BINARY_STRING</label>
+                        <input type="text" id="binary" placeholder="/bin/compiled_v1.7.2" required autocomplete="off">
                     </div>
 
-                    <div class="form-group">
-                        <label for="hash">SHA-256 Checksum (Hash)</label>
-                        <div class="input-with-button">
-                            <input type="text" id="hash" placeholder="Auto-generate or type manually" required>
-                            <button type="button" id="btn-generate-hash" class="btn-secondary">Generate</button>
+                    <div class="input-group">
+                        <label>CRYPTOGRAPHIC_HASH (SHA-256)</label>
+                        <div class="flex-row">
+                            <input type="text" id="hash" placeholder="Awaiting generation..." required autocomplete="off">
+                            <button type="button" id="btn-hash" class="btn-outline">Compute</button>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label>Telemetry Simulation [Sensor1, Sensor2, Sensor3]</label>
-                        <div class="telemetry-inputs">
+                    <div class="input-group">
+                        <label>TELEMETRY_DATAPOINTS [X, Y, Z]</label>
+                        <div class="telemetry-grid">
                             <input type="number" step="0.1" id="t1" placeholder="0.5" required>
                             <input type="number" step="0.1" id="t2" placeholder="1.2" required>
                             <input type="number" step="0.1" id="t3" placeholder="0.3" required>
                         </div>
                     </div>
 
-                    <button type="submit" class="btn-primary" id="btn-submit">
-                        <span id="btn-text">Initiate Secure Scan</span>
-                        <div class="loader" id="submit-loader" style="display:none;"></div>
+                    <button type="submit" class="btn-glow" id="btn-submit">
+                        <span id="btn-text">Execute AI Verification</span>
+                        <div class="loader" id="loader"></div>
                     </button>
                 </form>
             </div>
 
-            <!-- Analysis Dashboard -->
-            <div class="glass-panel results-panel">
-                <h2>Analysis Results</h2>
-                
-                <div id="results-display" class="results-empty">
-                    <div class="empty-state">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-                        <p>Awaiting OTA Submission</p>
+            <!-- RIGHT PANEL: HUD & TERMINAL -->
+            <div class="panel">
+                <h2>Analysis_Telemetry</h2>
+                <div id="results-display">
+                    <div class="empty-zone">
+                        <span>[ SYSTEM AWAITING INJECTION ]</span>
                     </div>
                 </div>
 
-                <div class="terminal">
-                    <div class="terminal-header">
-                        <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
-                        <span class="term-title">system_logs</span>
+                <div class="cyber-term">
+                    <div class="term-bar">
+                        <div class="term-dot"></div><div class="term-dot"></div><div class="term-dot"></div>
+                        <span style="margin-left: 10px; color: #64748b; font-size: 0.75rem; font-family: monospace;">bash - verification_subsystem.sh</span>
                     </div>
-                    <div class="terminal-body" id="term-logs">
-                        <div>> Initializing verification environment...</div>
-                        <div>> Connected to Python AI Service...</div>
+                    <div class="term-body" id="term-logs">
+                        <div class="log-line">> root@euc-smart:~# init secure_link</div>
+                        <div class="log-line">> Daemon listening at /api/verify-ota...</div>
                     </div>
                 </div>
             </div>
-        </section>
-    </main>
+        </main>
+    </div>
 
-    <script src="script.js"></script>
+    <script>
+        const form = document.getElementById('cyber-form');
+        const termLogs = document.getElementById('term-logs');
+        const resultsDisplay = document.getElementById('results-display');
+        
+        async function genHash(text) {
+            const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+        }
+
+        function appendLog(msg, type="") {
+            const div = document.createElement('div');
+            div.className = `log-line ${type}`;
+            div.textContent = `> ${msg}`;
+            termLogs.appendChild(div);
+            termLogs.scrollTop = termLogs.scrollHeight;
+        }
+
+        document.getElementById('btn-hash').addEventListener('click', async () => {
+            const bin = document.getElementById('binary').value;
+            if(!bin) return appendLog('ERR: Empty binary string detected.', 'error');
+            appendLog('Computing SHA-256 checksum protocol...');
+            document.getElementById('hash').value = await genHash(bin);
+            appendLog('Checksum acquired successfully.', 'success');
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btnText = document.getElementById('btn-text');
+            const loader = document.getElementById('loader');
+            
+            btnText.style.display = 'none'; loader.style.display = 'block';
+            appendLog('Packaging payload and executing fetch protocol...');
+
+            const payload = {
+                binary_string: document.getElementById('binary').value,
+                hash: document.getElementById('hash').value,
+                telemetry: [
+                    parseFloat(document.getElementById('t1').value),
+                    parseFloat(document.getElementById('t2').value),
+                    parseFloat(document.getElementById('t3').value)
+                ]
+            };
+
+            try {
+                const res = await fetch('/api/verify-ota', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await res.json();
+                appendLog(`Server responded with Code: ${res.status}`);
+                
+                if(!res.ok) {
+                    resultsDisplay.innerHTML = `
+                        <div class="result-hud" style="border-left-color: var(--danger)">
+                            <div class="hud-header">
+                                <h3>VERIFICATION FAILED</h3>
+                                <span class="status-tag tag-err">REJECTED</span>
+                            </div>
+                            <div class="metric-grid">
+                                <div class="metric"><p>REASON</p><h4 class="val-bad">${data.reason}</h4></div>
+                                <div class="metric"><p>HASH PARSED</p><h4 style="font-size: 0.9rem;">${data.provided ? data.provided.substring(0,12)+'...' : 'N/A'}</h4></div>
+                            </div>
+                        </div>`;
+                    appendLog('Integrity protocol violated. Quarantine active.', 'error');
+                } else {
+                    const safe = data.status === "SUCCESS";
+                    resultsDisplay.innerHTML = `
+                        <div class="result-hud" style="border-left-color: ${safe ? 'var(--success)' : 'var(--danger)'}">
+                            <div class="hud-header">
+                                <h3>AI SCAN COMPLETE</h3>
+                                <span class="status-tag ${safe ? 'tag-ok' : 'tag-err'}">${data.status}</span>
+                            </div>
+                            <div class="metric-grid">
+                                <div class="metric"><p>INTEGRITY</p><h4 class="val-good">${data.integrity}</h4></div>
+                                <div class="metric"><p>RISK LEVEL</p><h4 class="${safe ? 'val-good' : 'val-bad'}">${data.risk_level}</h4></div>
+                                <div class="metric" style="grid-column: span 2"><p>MAHALANOBIS ANOMALY SCORE</p><h4 class="${safe ? 'val-good' : 'val-warn'}">${data.anomaly_score} / 3.0 Threshold</h4></div>
+                            </div>
+                        </div>`;
+                    appendLog(`Execution finalized. Result: ${data.status}`, safe ? 'success' : 'error');
+                }
+            } catch(e) {
+                appendLog(`NETWORK FAILURE: ${e.message}`, 'error');
+            } finally {
+                btnText.style.display = 'block'; loader.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>
