@@ -1,3 +1,8 @@
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "api/api.py" }
+  ]
+}
 from flask import Flask, request, jsonify
 import hashlib
 import numpy as np
